@@ -1,0 +1,7 @@
+<svg width="900" height="240" viewBox="0 0 900 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="240" rx="48" fill="none"/>
+  <text x="50%" y="48%" text-anchor="middle" dominant-baseline="middle"
+        font-family="Arial, Helvetica, sans-serif" font-size="86" font-weight="800" fill="#141217">FilmShelf</text>
+  <text x="50%" y="73%" text-anchor="middle" dominant-baseline="middle"
+        font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="600" fill="#7c6cf2">watchlist &amp; watched movies</text>
+</svg>
