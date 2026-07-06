@@ -54,7 +54,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .page {
   width: min(1180px, 94vw);
   margin: 0 auto;
-  padding: 34px 0 96px;
+  padding: 34px 0 136px;
 }
 
 .hero {
@@ -173,7 +173,7 @@ button { -webkit-tap-highlight-color: transparent; }
   display: flex;
   gap: 28px;
   overflow-x: auto;
-  padding: 20px 6px 34px;
+  padding: 20px 6px 54px;
   background: transparent;
   scroll-snap-type: x mandatory;
 }
@@ -291,18 +291,37 @@ button { -webkit-tap-highlight-color: transparent; }
 
 .floating-add {
   position: fixed;
-  right: max(22px, env(safe-area-inset-right));
-  bottom: max(24px, env(safe-area-inset-bottom));
+  left: 50%;
+  bottom: max(42px, calc(env(safe-area-inset-bottom) + 34px));
+  transform: translateX(-50%);
   z-index: 20;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
+  width: min(320px, 88vw);
+  height: 56px;
+  padding: 0 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border-radius: var(--radius-pill);
   border: 0;
-  background: var(--ink);
+  background: var(--purple);
   color: #fff;
-  font-size: 34px;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
   cursor: pointer;
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 18px 42px rgba(124, 108, 242, 0.35);
+}
+
+.floating-add span {
+  display: inline-block;
+  font-size: 24px;
+  line-height: 1;
+  transform: translateY(-1px);
+}
+
+.floating-add:active {
+  transform: translateX(-50%) scale(0.98);
 }
 
 .empty {
@@ -464,7 +483,7 @@ input, select {
 @media (max-width: 760px) {
   .page {
     width: min(94vw, 520px);
-    padding: 22px 0 92px;
+    padding: 22px 0 136px;
   }
 
   .hero {
@@ -496,7 +515,7 @@ input, select {
 
   .film-strip {
     gap: 22px;
-    padding-bottom: 90px;
+    padding-bottom: 110px;
   }
 
   .frame, .frame-inner {
