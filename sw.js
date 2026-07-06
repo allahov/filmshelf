@@ -1,4 +1,4 @@
-const CACHE_NAME = "filmshelf-cache-v1";
+const CACHE_NAME = "filmshelf-cache-v2";
 
 const FILES_TO_CACHE = [
   "./",
@@ -6,33 +6,46 @@ const FILES_TO_CACHE = [
   "./style.css",
   "./script.js",
   "./manifest.webmanifest",
-  "./filmshelf-logo.svg",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png"
+  "./filmshelf-logo.svg"
 ];
 
 self.addEventListener("install", (event) => {
+  self.skipWaiting();
+
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(FILES_TO_CACHE))
   );
-  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.map((key) => key !== CACHE_NAME ? caches.delete(key) : null))
-    )
+      Promise.all(
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+          return null;
+        })
+      )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return cached || fetch(event.request);
-    })
+    fetch(event.request)
+      .then((response) => {
+        const responseClone = response.clone();
+
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseClone);
+        });
+
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
