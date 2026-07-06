@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#141217" />
+  <title>FilmShelf</title>
+
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  <link rel="icon" href="./icons/icon-192.png" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+
+<body>
+  <div class="page">
+    <header class="hero">
+      <div class="brand-logo">
+        <h1>FilmShelf</h1>
+        <p>watchlist &amp; watched movies</p>
+      </div>
+
+      <div class="hero-strip" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </header>
+
+    <nav class="view-tabs">
+      <button class="view-tab active" data-view="watchlist" type="button">To Watch</button>
+      <button class="view-tab" data-view="watched" type="button">Watched</button>
+    </nav>
+
+    <section class="controls">
+      <div class="tabs">
+        <button class="tab active" data-type="all" type="button">All</button>
+        <button class="tab" data-type="movie" type="button">Movies</button>
+        <button class="tab" data-type="series" type="button">TV Series</button>
+      </div>
+
+      <div class="genres" id="genres"></div>
+    </section>
+
+    <section class="section-title">
+      <h2 id="shelfTitle">My film shelf</h2>
+      <p id="shelfSubtitle">Movies waiting on your shelf</p>
+    </section>
+
+    <section id="watchlist" class="film-strip"></section>
+  </div>
+
+  <button id="openModal" class="floating-add" type="button" aria-label="Add movie">+</button>
+
+  <div id="modal" class="modal hidden">
+    <div class="modal-card">
+      <button id="closeModal" class="close" type="button" aria-label="Close modal">×</button>
+
+      <h2 id="modalTitle">Add to shelf</h2>
+
+      <label class="image-picker">
+        <input id="posterInput" type="file" accept="image/*" />
+        <span class="image-preview" id="imagePreview">
+          <strong>+</strong>
+          <small>Choose image</small>
+        </span>
+      </label>
+
+      <label for="titleInput">Title</label>
+      <input id="titleInput" placeholder="Movie title" />
+
+      <div class="grid">
+        <div>
+          <label for="typeInput">Type</label>
+          <select id="typeInput">
+            <option value="movie">Movie</option>
+            <option value="series">TV Series</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="yearInput">Year</label>
+          <input id="yearInput" list="yearList" placeholder="2024" inputmode="numeric" />
+          <datalist id="yearList"></datalist>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <label for="genreInput">Genre</label>
+          <select id="genreInput"></select>
+        </div>
+
+        <div>
+          <label for="countryInput">Country</label>
+          <input id="countryInput" list="countryList" placeholder="France" />
+          <datalist id="countryList"></datalist>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button id="deleteMovie" class="delete hidden" type="button">Delete card</button>
+        <button id="saveMovie" class="save" type="button">Add to shelf</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./script.js"></script>
+</body>
+</html>
