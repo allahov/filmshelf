@@ -15,14 +15,9 @@
   --radius-pill: 999px;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
-html {
-  min-height: 100%;
-  -webkit-text-size-adjust: 100%;
-}
+html { min-height: 100%; -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
@@ -37,9 +32,7 @@ body {
     linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
 }
 
-body.modal-open {
-  overflow: hidden;
-}
+body.modal-open { overflow: hidden; }
 
 body::before {
   content: "";
@@ -55,15 +48,8 @@ body::before {
   background-position: 0 0, 24px 26px;
 }
 
-button,
-input,
-select {
-  font: inherit;
-}
-
-button {
-  -webkit-tap-highlight-color: transparent;
-}
+button, input, select { font: inherit; }
+button { -webkit-tap-highlight-color: transparent; }
 
 .page {
   width: min(1180px, 94vw);
@@ -75,7 +61,7 @@ button {
   position: relative;
   overflow: hidden;
   text-align: center;
-  padding: 46px 26px 38px;
+  padding: 34px 26px;
   background:
     radial-gradient(circle at 20% 12%, rgba(237, 232, 255, 0.95), transparent 26%),
     radial-gradient(circle at 82% 20%, rgba(248, 221, 234, 0.78), transparent 24%),
@@ -85,34 +71,23 @@ button {
   box-shadow: var(--shadow-soft);
 }
 
+.brand {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 26px;
+}
+
 .brand-logo {
-  display: grid;
-  place-items: center;
-  gap: 4px;
-  margin-bottom: 34px;
-}
-
-.brand-logo h1 {
-  margin: 0;
-  color: var(--ink);
-  font-size: clamp(52px, 7vw, 86px);
-  line-height: 0.95;
-  letter-spacing: -0.06em;
-  font-weight: 800;
-}
-
-.brand-logo p {
-  margin: 0;
-  color: var(--purple);
-  font-size: clamp(17px, 2.1vw, 27px);
-  line-height: 1.1;
-  font-weight: 800;
+  width: min(560px, 86vw);
+  height: auto;
+  display: block;
 }
 
 .hero-strip {
   width: min(620px, 86%);
   height: 70px;
-  margin: 0 auto;
+  margin: 22px auto 0;
   display: flex;
   gap: 10px;
   padding: 10px 14px;
@@ -137,9 +112,7 @@ button {
   margin: 22px 0 8px;
 }
 
-.view-tab,
-.tab,
-.genre {
+.view-tab, .tab, .genre {
   border: 1px solid var(--line);
   cursor: pointer;
   padding: 12px 22px;
@@ -156,12 +129,9 @@ button {
   border-color: var(--ink);
 }
 
-.controls {
-  margin: 18px 0 20px;
-}
+.controls { margin: 18px 0 20px; }
 
-.tabs,
-.genres {
+.tabs, .genres {
   display: flex;
   gap: 10px;
   overflow-x: auto;
@@ -169,30 +139,22 @@ button {
   scrollbar-width: none;
 }
 
-.tabs::-webkit-scrollbar,
-.genres::-webkit-scrollbar,
-.film-strip::-webkit-scrollbar {
-  display: none;
-}
+.tabs::-webkit-scrollbar, .genres::-webkit-scrollbar, .film-strip::-webkit-scrollbar { display: none; }
 
-.tab,
-.genre {
+.tab, .genre {
   white-space: nowrap;
   font-size: 13px;
   padding: 11px 17px;
 }
 
-.tab.active,
-.genre.active {
+.tab.active, .genre.active {
   color: #fff;
   background: var(--purple);
   border-color: var(--purple);
   box-shadow: 0 10px 24px rgba(124, 108, 242, 0.25);
 }
 
-.section-title {
-  margin: 30px 0 16px;
-}
+.section-title { margin: 30px 0 16px; }
 
 .section-title h2 {
   margin: 0;
@@ -239,9 +201,7 @@ button {
   transition: 0.25s ease;
 }
 
-.frame:hover .frame-inner {
-  transform: translateY(-7px);
-}
+.frame:hover .frame-inner { transform: translateY(-7px); }
 
 .poster {
   width: 194px;
@@ -267,8 +227,7 @@ button {
   font-size: 32px;
 }
 
-.frame-inner::before,
-.frame-inner::after {
+.frame-inner::before, .frame-inner::after {
   content: "";
   position: absolute;
   top: 31px;
@@ -284,17 +243,10 @@ button {
   border-radius: 6px;
 }
 
-.frame-inner::before {
-  left: 31px;
-}
+.frame-inner::before { left: 31px; }
+.frame-inner::after { right: 31px; }
 
-.frame-inner::after {
-  right: 31px;
-}
-
-.meta {
-  padding: 18px 2px 0;
-}
+.meta { padding: 18px 2px 0; }
 
 .meta h3 {
   margin: 0 0 12px;
@@ -373,10 +325,7 @@ button {
   backdrop-filter: blur(8px);
 }
 
-.modal.hidden,
-.hidden {
-  display: none !important;
-}
+.modal.hidden, .hidden { display: none !important; }
 
 .modal-card {
   position: relative;
@@ -392,22 +341,43 @@ button {
   box-shadow: 0 32px 90px rgba(0, 0, 0, 0.28);
 }
 
-.close {
+.close, .delete-icon {
   position: absolute;
   top: 14px;
-  right: 18px;
   width: 38px;
   height: 38px;
   border: 0;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.78);
-  font-size: 30px;
   cursor: pointer;
+}
+
+.close {
+  right: 18px;
+  font-size: 30px;
+  line-height: 1;
+}
+
+.delete-icon {
+  right: 62px;
+  display: grid;
+  place-items: center;
+  color: #b42318;
+}
+
+.delete-icon svg {
+  width: 19px;
+  height: 19px;
+  fill: currentColor;
+}
+
+.delete-icon:hover {
+  background: rgba(180, 35, 24, 0.1);
 }
 
 .modal-card h2 {
   margin: 0 0 18px;
-  padding-right: 42px;
+  padding-right: 86px;
   font-family: Caveat, cursive;
   font-size: 48px;
   line-height: 1;
@@ -419,9 +389,7 @@ button {
   cursor: pointer;
 }
 
-.image-picker input {
-  display: none;
-}
+.image-picker input { display: none; }
 
 .image-preview {
   height: 210px;
@@ -438,14 +406,8 @@ button {
   color: var(--purple);
 }
 
-.image-preview strong {
-  font-size: 42px;
-}
-
-.image-preview small {
-  margin-top: -58px;
-  font-weight: 800;
-}
+.image-preview strong { font-size: 42px; }
+.image-preview small { margin-top: -58px; font-weight: 800; }
 
 .image-preview img {
   width: 100%;
@@ -462,8 +424,7 @@ label {
   font-weight: 800;
 }
 
-input,
-select {
+input, select {
   width: 100%;
   padding: 13px 14px;
   border-radius: 14px;
@@ -479,37 +440,19 @@ select {
   gap: 14px;
 }
 
-.modal-actions {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-  margin-top: 22px;
-}
-
-.save,
-.delete {
+.save {
   width: 100%;
+  margin-top: 22px;
   padding: 15px;
   border-radius: 18px;
+  border: 0;
   cursor: pointer;
+  color: #ffffff;
+  background: var(--purple);
   font-weight: 800;
 }
 
-.save {
-  border: 0;
-  color: #ffffff;
-  background: var(--purple);
-}
-
-.delete {
-  border: 1.5px solid rgba(180, 35, 24, 0.22);
-  color: #b42318;
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.frame.watching-out {
-  animation: watched 0.58s ease forwards;
-}
+.frame.watching-out { animation: watched 0.58s ease forwards; }
 
 @keyframes watched {
   to {
@@ -525,16 +468,12 @@ select {
   }
 
   .hero {
-    padding: 34px 18px 30px;
+    padding: 30px 18px 28px;
     border-radius: 28px;
   }
 
-  .brand-logo h1 {
-    font-size: 54px;
-  }
-
-  .brand-logo p {
-    font-size: 17px;
+  .brand-logo {
+    width: min(460px, 88vw);
   }
 
   .hero-strip {
@@ -560,8 +499,7 @@ select {
     padding-bottom: 90px;
   }
 
-  .frame,
-  .frame-inner {
+  .frame, .frame-inner {
     width: 230px;
     min-width: 230px;
     max-width: 230px;

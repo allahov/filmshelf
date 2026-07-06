@@ -1,4 +1,4 @@
-const STORAGE_KEY = "filmshelf_movies_v3";
+const STORAGE_KEY = "filmshelf_movies_v4";
 
 const genres = [
   "All", "Drama", "Comedy", "Thriller", "Crime", "Romance", "Action",
@@ -68,14 +68,12 @@ const shelfEl = document.getElementById("watchlist");
 const genresEl = document.getElementById("genres");
 const shelfTitle = document.getElementById("shelfTitle");
 const shelfSubtitle = document.getElementById("shelfSubtitle");
-
 const modal = document.getElementById("modal");
 const openModal = document.getElementById("openModal");
 const closeModal = document.getElementById("closeModal");
 const saveMovie = document.getElementById("saveMovie");
 const deleteMovie = document.getElementById("deleteMovie");
 const modalTitle = document.getElementById("modalTitle");
-
 const titleInput = document.getElementById("titleInput");
 const posterInput = document.getElementById("posterInput");
 const imagePreview = document.getElementById("imagePreview");
@@ -89,9 +87,7 @@ const yearList = document.getElementById("yearList");
 function loadMovies() {
   const saved = localStorage.getItem(STORAGE_KEY);
 
-  if (!saved) {
-    return starterMovies;
-  }
+  if (!saved) return starterMovies;
 
   try {
     const parsed = JSON.parse(saved);
@@ -240,9 +236,7 @@ function attachToggleEvents() {
       const id = Number(button.dataset.toggle);
       const frame = document.querySelector(`.frame[data-id="${id}"]`);
 
-      if (frame) {
-        frame.classList.add("watching-out");
-      }
+      if (frame) frame.classList.add("watching-out");
 
       setTimeout(() => {
         movies = movies.map((movie) => {
@@ -315,7 +309,6 @@ function openAddModal() {
   modalTitle.textContent = "Add to shelf";
   saveMovie.textContent = "Add to shelf";
   deleteMovie.classList.add("hidden");
-
   resetForm();
   openMovieModal();
 }

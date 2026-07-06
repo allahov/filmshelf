@@ -1,4 +1,4 @@
-const CACHE_NAME = "filmshelf-cache-final-v1";
+const CACHE_NAME = "filmshelf-cache-final-v2";
 
 const FILES_TO_CACHE = [
   "./",

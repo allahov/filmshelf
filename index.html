@@ -15,9 +15,8 @@
 <body>
   <div class="page">
     <header class="hero">
-      <div class="brand-logo">
-        <h1>FilmShelf</h1>
-        <p>watchlist &amp; watched movies</p>
+      <div class="brand">
+        <img class="brand-logo" src="./filmshelf-logo.svg" alt="FilmShelf logo">
       </div>
 
       <div class="hero-strip" aria-hidden="true">
@@ -56,6 +55,12 @@
 
   <div id="modal" class="modal hidden">
     <div class="modal-card">
+      <button id="deleteMovie" class="delete-icon hidden" type="button" aria-label="Delete card" title="Delete card">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm1 6h2v9h-2V9Zm4 0h2v9h-2V9ZM7 9h2v10h6v-1h2v3H7V9Z"/>
+        </svg>
+      </button>
+
       <button id="closeModal" class="close" type="button" aria-label="Close modal">×</button>
 
       <h2 id="modalTitle">Add to shelf</h2>
@@ -100,10 +105,7 @@
         </div>
       </div>
 
-      <div class="modal-actions">
-        <button id="deleteMovie" class="delete hidden" type="button">Delete card</button>
-        <button id="saveMovie" class="save" type="button">Add to shelf</button>
-      </div>
+      <button id="saveMovie" class="save" type="button">Add to shelf</button>
     </div>
   </div>
 
