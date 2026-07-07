@@ -283,45 +283,195 @@ async function offerLegacyImportIfNeeded() {
   }
 }
 
-function getSignOutButton() {
-  let button = document.getElementById("topSignOutButton");
+function getProfileMenu() {
+  let wrapper = document.getElementById("profileMenuWrapper");
 
-  if (button) {
-    return button;
+  if (wrapper) {
+    return wrapper;
   }
 
-  button = document.createElement("button");
-  button.id = "topSignOutButton";
-  button.type = "button";
-  button.textContent = "Sign out";
-  button.style.position = "fixed";
-  button.style.top = "18px";
-  button.style.right = "22px";
-  button.style.zIndex = "40";
-  button.style.padding = "11px 16px";
-  button.style.borderRadius = "999px";
-  button.style.border = "1px solid rgba(20,18,23,.14)";
-  button.style.background = "rgba(255,255,255,.9)";
-  button.style.color = "#201d27";
-  button.style.fontWeight = "800";
-  button.style.cursor = "pointer";
-  button.style.boxShadow = "0 14px 34px rgba(31, 24, 55, 0.10)";
-  button.style.backdropFilter = "blur(8px)";
-  button.onclick = signOut;
+  wrapper = document.createElement("div");
+  wrapper.id = "profileMenuWrapper";
+  wrapper.style.position = "fixed";
+  wrapper.style.top = "18px";
+  wrapper.style.right = "22px";
+  wrapper.style.zIndex = "60";
+  wrapper.style.display = "none";
 
-  document.body.appendChild(button);
-  return button;
+  wrapper.innerHTML = `
+    <button id="profileAvatarButton" type="button" aria-label="Profile menu" style="
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      border: 1px solid rgba(20,18,23,.12);
+      background: rgba(255,255,255,.94);
+      color: #7c6cf2;
+      font-weight: 900;
+      font-size: 18px;
+      cursor: pointer;
+      box-shadow: 0 16px 38px rgba(31,24,55,.14);
+      backdrop-filter: blur(10px);
+      display: grid;
+      place-items: center;
+    ">A</button>
+
+    <div id="profileDropdown" style="
+      position: absolute;
+      top: 56px;
+      right: 0;
+      width: min(280px, calc(100vw - 32px));
+      padding: 16px;
+      border-radius: 22px;
+      background: rgba(255,255,255,.97);
+      border: 1px solid rgba(20,18,23,.10);
+      box-shadow: 0 24px 70px rgba(31,24,55,.18);
+      backdrop-filter: blur(14px);
+      display: none;
+    ">
+      <div style="
+        display:flex;
+        align-items:center;
+        gap:12px;
+        padding-bottom:14px;
+        border-bottom:1px solid rgba(20,18,23,.10);
+      ">
+        <div id="profileAvatarLarge" style="
+          width: 42px;
+          height: 42px;
+          border-radius: 50%;
+          background: #ede8ff;
+          color: #7c6cf2;
+          display:grid;
+          place-items:center;
+          font-weight:900;
+          font-size:17px;
+          flex:0 0 auto;
+        ">A</div>
+
+        <div style="min-width:0;">
+          <strong id="profileName" style="
+            display:block;
+            color:#141217;
+            font-size:14px;
+            line-height:1.2;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+          ">FilmShelf user</strong>
+          <span id="profileEmail" style="
+            display:block;
+            color:#777180;
+            font-size:12px;
+            margin-top:4px;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+          "></span>
+        </div>
+      </div>
+
+      <div style="
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        padding:14px 0;
+        border-bottom:1px solid rgba(20,18,23,.10);
+      ">
+        <span style="color:#201d27; font-size:13px; font-weight:800;">Cloud sync</span>
+        <span style="
+          color:#5e50d8;
+          background:#ede8ff;
+          border-radius:999px;
+          padding:6px 10px;
+          font-size:12px;
+          font-weight:900;
+        ">On</span>
+      </div>
+
+      <button id="profileSignOutButton" type="button" style="
+        width:100%;
+        margin-top:12px;
+        padding:12px 14px;
+        border-radius:16px;
+        border:1px solid rgba(20,18,23,.12);
+        background:rgba(255,255,255,.9);
+        color:#201d27;
+        font-weight:900;
+        cursor:pointer;
+        text-align:center;
+      ">Sign out</button>
+    </div>
+  `;
+
+  document.body.appendChild(wrapper);
+
+  const avatarButton = document.getElementById("profileAvatarButton");
+  const dropdown = document.getElementById("profileDropdown");
+  const signOutButton = document.getElementById("profileSignOutButton");
+
+  avatarButton.onclick = (event) => {
+    event.stopPropagation();
+    dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
+  };
+
+  dropdown.onclick = (event) => {
+    event.stopPropagation();
+  };
+
+  signOutButton.onclick = async () => {
+    dropdown.style.display = "none";
+    await signOut();
+  };
+
+  document.addEventListener("click", () => {
+    dropdown.style.display = "none";
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      dropdown.style.display = "none";
+    }
+  });
+
+  return wrapper;
+}
+
+function getUserInitial(email) {
+  if (!email) {
+    return "A";
+  }
+
+  return email.trim().charAt(0).toUpperCase();
 }
 
 function renderAuthState() {
-  const signOutButton = getSignOutButton();
+  const wrapper = getProfileMenu();
 
   if (!session) {
-    signOutButton.style.display = "none";
+    wrapper.style.display = "none";
     return;
   }
 
-  signOutButton.style.display = "block";
+  const email = session.user?.email || "";
+  const initial = getUserInitial(email);
+
+  wrapper.style.display = "block";
+
+  const avatarButton = document.getElementById("profileAvatarButton");
+  const avatarLarge = document.getElementById("profileAvatarLarge");
+  const profileName = document.getElementById("profileName");
+  const profileEmail = document.getElementById("profileEmail");
+  const dropdown = document.getElementById("profileDropdown");
+
+  avatarButton.textContent = initial;
+  avatarLarge.textContent = initial;
+  profileName.textContent = email ? email.split("@")[0] : "FilmShelf user";
+  profileEmail.textContent = email;
+
+  if (dropdown) {
+    dropdown.style.display = "none";
+  }
 }
 
 function renderSignInShelf() {
