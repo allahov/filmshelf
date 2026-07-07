@@ -1,6 +1,4 @@
-const SUPABASE_URL = "https://roovratpatxubbdgzrtr.supabase.co";
-const SUPABASE_KEY = "sb_publishable_8kKEZ9yGoDiwVKMvcwYqZg_5T8bNNln";
-const MOVIES_ENDPOINT = `${SUPABASE_URL}/rest/v1/movies`;
+const STORAGE_KEY = "filmshelf_movies_v4";
 
 const genres = [
   "All", "Drama", "Comedy", "Thriller", "Crime", "Romance", "Action",
@@ -16,13 +14,55 @@ const countries = [
   "Czech Republic", "Greece", "Ireland", "Israel", "Ukraine"
 ];
 
-let movies = [];
+const starterMovies = [
+  {
+    id: 1,
+    title: "La La Land",
+    type: "movie",
+    genre: "Romance",
+    year: "2016",
+    country: "USA",
+    poster: "https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=600&auto=format&fit=crop",
+    status: "watchlist"
+  },
+  {
+    id: 2,
+    title: "The Crown",
+    type: "series",
+    genre: "Drama",
+    year: "2016",
+    country: "UK",
+    poster: "https://images.unsplash.com/photo-1518676590629-3dcbd9c5a5c9?q=80&w=600&auto=format&fit=crop",
+    status: "watchlist"
+  },
+  {
+    id: 3,
+    title: "Amélie",
+    type: "movie",
+    genre: "Comedy",
+    year: "2001",
+    country: "France",
+    poster: "",
+    status: "watchlist"
+  },
+  {
+    id: 4,
+    title: "Only Murders in the Building",
+    type: "series",
+    genre: "Crime",
+    year: "2021",
+    country: "USA",
+    poster: "",
+    status: "watched"
+  }
+];
+
+let movies = loadMovies();
 let activeType = "all";
 let activeGenre = "All";
 let activeView = "watchlist";
 let selectedPoster = "";
 let editingId = null;
-let isLoading = true;
 
 const shelfEl = document.getElementById("watchlist");
 const genresEl = document.getElementById("genres");
@@ -44,71 +84,21 @@ const countryInput = document.getElementById("countryInput");
 const countryList = document.getElementById("countryList");
 const yearList = document.getElementById("yearList");
 
-function supabaseHeaders(extraHeaders = {}) {
-  return {
-    apikey: SUPABASE_KEY,
-    Authorization: `Bearer ${SUPABASE_KEY}`,
-    "Content-Type": "application/json",
-    ...extraHeaders
-  };
+function loadMovies() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+
+  if (!saved) return starterMovies;
+
+  try {
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed : starterMovies;
+  } catch {
+    return starterMovies;
+  }
 }
 
-async function fetchMoviesFromCloud() {
-  const response = await fetch(`${MOVIES_ENDPOINT}?select=*&order=created_at.desc`, {
-    headers: supabaseHeaders()
-  });
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || "Could not load movies");
-  }
-
-  const data = await response.json();
-  return Array.isArray(data) ? data : [];
-}
-
-async function createMovieInCloud(movie) {
-  const response = await fetch(MOVIES_ENDPOINT, {
-    method: "POST",
-    headers: supabaseHeaders({ Prefer: "return=representation" }),
-    body: JSON.stringify(movie)
-  });
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || "Could not add movie");
-  }
-
-  const data = await response.json();
-  return data[0];
-}
-
-async function updateMovieInCloud(id, updates) {
-  const response = await fetch(`${MOVIES_ENDPOINT}?id=eq.${encodeURIComponent(id)}`, {
-    method: "PATCH",
-    headers: supabaseHeaders({ Prefer: "return=representation" }),
-    body: JSON.stringify(updates)
-  });
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || "Could not update movie");
-  }
-
-  const data = await response.json();
-  return data[0];
-}
-
-async function deleteMovieFromCloud(id) {
-  const response = await fetch(`${MOVIES_ENDPOINT}?id=eq.${encodeURIComponent(id)}`, {
-    method: "DELETE",
-    headers: supabaseHeaders()
-  });
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || "Could not delete movie");
-  }
+function saveMovies() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(movies));
 }
 
 function escapeHTML(value) {
@@ -229,11 +219,6 @@ function render() {
   const list = filteredMovies();
   shelfEl.innerHTML = "";
 
-  if (isLoading) {
-    shelfEl.innerHTML = `<div class="empty">Loading your shelf...</div>`;
-    return;
-  }
-
   if (!list.length) {
     shelfEl.innerHTML = `<div class="empty">Your shelf is empty</div>`;
   } else {
@@ -243,44 +228,29 @@ function render() {
   attachToggleEvents();
 }
 
-function showCloudError(error) {
-  console.error(error);
-  alert("Cloud sync error. Please check Supabase settings and try again.");
-}
-
-function setSavingState(isSaving) {
-  saveMovie.disabled = isSaving;
-  saveMovie.textContent = isSaving ? "Saving..." : (editingId ? "Save changes" : "Add to shelf");
-}
-
 function attachToggleEvents() {
   document.querySelectorAll("[data-toggle]").forEach((button) => {
-    button.onclick = async (event) => {
+    button.onclick = (event) => {
       event.stopPropagation();
 
-      const id = button.dataset.toggle;
-      const movie = movies.find((item) => item.id === id);
+      const id = String(button.dataset.toggle);
       const frame = document.querySelector(`.frame[data-id="${id}"]`);
-
-      if (!movie) return;
-
-      const newStatus = movie.status === "watchlist" ? "watched" : "watchlist";
 
       if (frame) frame.classList.add("watching-out");
 
-      try {
-        await updateMovieInCloud(id, { status: newStatus });
+      setTimeout(() => {
+        movies = movies.map((movie) => {
+          if (String(movie.id) !== id) return movie;
 
-        movies = movies.map((item) => {
-          if (item.id !== id) return item;
-          return { ...item, status: newStatus };
+          return {
+            ...movie,
+            status: movie.status === "watchlist" ? "watched" : "watchlist"
+          };
         });
 
-        setTimeout(() => render(), 220);
-      } catch (error) {
-        if (frame) frame.classList.remove("watching-out");
-        showCloudError(error);
-      }
+        saveMovies();
+        render();
+      }, 560);
     };
   });
 }
@@ -344,11 +314,11 @@ function openAddModal() {
 }
 
 function openEditModal(id) {
-  const movie = movies.find((item) => item.id === id);
+  const movie = movies.find((item) => String(item.id) === String(id));
 
   if (!movie) return;
 
-  editingId = id;
+  editingId = movie.id;
   selectedPoster = movie.poster || "";
 
   modalTitle.textContent = movie.title?.trim() || "Edit card";
@@ -400,7 +370,7 @@ function resetForm() {
   `;
 }
 
-saveMovie.onclick = async () => {
+saveMovie.onclick = () => {
   const title = titleInput.value.trim();
 
   if (!title) {
@@ -408,80 +378,55 @@ saveMovie.onclick = async () => {
     return;
   }
 
-  setSavingState(true);
+  if (editingId) {
+    movies = movies.map((movie) => {
+      if (String(movie.id) !== String(editingId)) return movie;
 
-  const moviePayload = {
-    title,
-    poster: selectedPoster,
-    type: typeInput.value,
-    genre: genreInput.value || "",
-    year: yearInput.value.trim(),
-    country: countryInput.value.trim()
-  };
-
-  try {
-    if (editingId) {
-      const updatedMovie = await updateMovieInCloud(editingId, moviePayload);
-
-      movies = movies.map((movie) => {
-        if (movie.id !== editingId) return movie;
-        return updatedMovie;
-      });
-    } else {
-      const newMovie = await createMovieInCloud({
-        ...moviePayload,
-        status: activeView === "watched" ? "watched" : "watchlist"
-      });
-
-      movies.unshift(newMovie);
-    }
-
-    resetForm();
-    closeMovieModal();
-    render();
-  } catch (error) {
-    showCloudError(error);
-  } finally {
-    setSavingState(false);
+      return {
+        ...movie,
+        title,
+        poster: selectedPoster,
+        type: typeInput.value,
+        genre: genreInput.value || "",
+        year: yearInput.value.trim(),
+        country: countryInput.value.trim()
+      };
+    });
+  } else {
+    movies.unshift({
+      id: Date.now(),
+      title,
+      poster: selectedPoster,
+      type: typeInput.value,
+      genre: genreInput.value || "",
+      year: yearInput.value.trim(),
+      country: countryInput.value.trim(),
+      status: activeView === "watched" ? "watched" : "watchlist"
+    });
   }
+
+  saveMovies();
+  resetForm();
+  closeMovieModal();
+  render();
 };
 
-deleteMovie.onclick = async () => {
+deleteMovie.onclick = () => {
   if (!editingId) return;
 
-  const movie = movies.find((item) => item.id === editingId);
+  const movie = movies.find((item) => String(item.id) === String(editingId));
   const title = movie?.title || "this card";
   const confirmed = window.confirm(`Delete "${title}" from your shelf?`);
 
   if (!confirmed) return;
 
-  try {
-    await deleteMovieFromCloud(editingId);
+  movies = movies.filter((movie) => String(movie.id) !== String(editingId));
 
-    movies = movies.filter((movie) => movie.id !== editingId);
-
-    resetForm();
-    closeMovieModal();
-    render();
-  } catch (error) {
-    showCloudError(error);
-  }
-};
-
-async function initApp() {
-  initLists();
+  saveMovies();
+  resetForm();
+  closeMovieModal();
   render();
-
-  try {
-    movies = await fetchMoviesFromCloud();
-  } catch (error) {
-    showCloudError(error);
-    movies = [];
-  } finally {
-    isLoading = false;
-    render();
-  }
-}
+};
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
@@ -489,4 +434,5 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-initApp();
+initLists();
+render();
