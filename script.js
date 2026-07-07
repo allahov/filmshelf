@@ -283,99 +283,194 @@ async function offerLegacyImportIfNeeded() {
   }
 }
 
-function createAuthPanel() {
-  let authPanel = document.getElementById("authPanel");
+function getSignOutButton() {
+  let button = document.getElementById("topSignOutButton");
 
-  if (authPanel) return authPanel;
+  if (button) {
+    return button;
+  }
 
-  authPanel = document.createElement("section");
-  authPanel.id = "authPanel";
-  authPanel.style.margin = "18px 0 12px";
-  authPanel.style.padding = "18px";
-  authPanel.style.borderRadius = "24px";
-  authPanel.style.background = "rgba(255, 255, 255, 0.78)";
-  authPanel.style.border = "1px solid rgba(20, 18, 23, 0.10)";
-  authPanel.style.boxShadow = "0 14px 34px rgba(31, 24, 55, 0.08)";
+  button = document.createElement("button");
+  button.id = "topSignOutButton";
+  button.type = "button";
+  button.textContent = "Sign out";
+  button.style.position = "fixed";
+  button.style.top = "18px";
+  button.style.right = "22px";
+  button.style.zIndex = "40";
+  button.style.padding = "11px 16px";
+  button.style.borderRadius = "999px";
+  button.style.border = "1px solid rgba(20,18,23,.14)";
+  button.style.background = "rgba(255,255,255,.9)";
+  button.style.color = "#201d27";
+  button.style.fontWeight = "800";
+  button.style.cursor = "pointer";
+  button.style.boxShadow = "0 14px 34px rgba(31, 24, 55, 0.10)";
+  button.style.backdropFilter = "blur(8px)";
+  button.onclick = signOut;
 
-  const controls = document.querySelector(".controls");
-  controls.parentNode.insertBefore(authPanel, controls);
-
-  return authPanel;
+  document.body.appendChild(button);
+  return button;
 }
 
 function renderAuthState() {
-  const authPanel = createAuthPanel();
+  const signOutButton = getSignOutButton();
 
   if (!session) {
-    authPanel.innerHTML = `
-      <div style="display:grid; gap:12px;">
-        <div>
-          <strong style="display:block; color:#141217; font-size:16px;">Sign in to sync your shelf</strong>
-          <span style="display:block; color:#777180; font-size:13px; margin-top:4px;">
-            Enter your email and open the magic link.
-          </span>
-        </div>
-
-        <div style="display:grid; grid-template-columns:1fr auto; gap:10px;">
-          <input id="authEmailInput" type="email" placeholder="your@email.com"
-            style="min-width:0; padding:13px 14px; border-radius:14px; border:1px solid rgba(20,18,23,.14); background:rgba(255,255,255,.9);">
-          <button id="authEmailButton" type="button"
-            style="padding:13px 18px; border-radius:999px; border:0; background:#7c6cf2; color:#fff; font-weight:800; cursor:pointer;">
-            Send link
-          </button>
-        </div>
-
-        <div id="authMessage" style="color:#777180; font-size:13px;"></div>
-      </div>
-    `;
-
-    const emailInput = document.getElementById("authEmailInput");
-    const emailButton = document.getElementById("authEmailButton");
-    const authMessage = document.getElementById("authMessage");
-
-    emailButton.onclick = async () => {
-      const email = emailInput.value.trim();
-
-      if (!email) {
-        emailInput.focus();
-        return;
-      }
-
-      emailButton.disabled = true;
-      emailButton.textContent = "Sending...";
-
-      try {
-        await signInWithEmail(email);
-        authMessage.textContent = "Magic link sent. Open it from your email on this device.";
-      } catch (error) {
-        console.error(error);
-        authMessage.textContent = "Could not send magic link. Check Supabase Auth settings.";
-      } finally {
-        emailButton.disabled = false;
-        emailButton.textContent = "Send link";
-      }
-    };
-
+    signOutButton.style.display = "none";
     return;
   }
 
-  const email = session.user?.email || "Signed in";
+  signOutButton.style.display = "block";
+}
 
-  authPanel.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
-      <div>
-        <strong style="display:block; color:#141217; font-size:16px;">Cloud sync is on</strong>
-        <span style="display:block; color:#777180; font-size:13px; margin-top:4px;">${escapeHTML(email)}</span>
-      </div>
+function renderSignInShelf() {
+  shelfEl.innerHTML = `
+    <div class="empty" style="
+      width: 100%;
+      max-width: 560px;
+      margin: 8px auto 0;
+      padding: 38px 28px;
+      border-radius: 30px;
+      background: rgba(255,255,255,.78);
+      border: 1px solid rgba(20,18,23,.10);
+      box-shadow: 0 14px 34px rgba(31,24,55,.08);
+      font-family: Inter, sans-serif;
+      font-size: 16px;
+      color: #201d27;
+    ">
+      <strong style="
+        display:block;
+        font-family: Caveat, cursive;
+        font-size: 42px;
+        color: #141217;
+        margin-bottom: 8px;
+      ">Sign in to sync your movies</strong>
 
-      <button id="signOutButton" type="button"
-        style="padding:11px 16px; border-radius:999px; border:1px solid rgba(20,18,23,.14); background:rgba(255,255,255,.9); color:#201d27; font-weight:800; cursor:pointer;">
-        Sign out
-      </button>
+      <span style="
+        display:block;
+        color: #777180;
+        font-size: 14px;
+        line-height: 1.45;
+        margin-bottom: 20px;
+      ">across all your devices.</span>
+
+      <button id="openSignInModal" type="button" style="
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-width: 170px;
+        height: 50px;
+        padding: 0 22px;
+        border-radius: 999px;
+        border: 0;
+        background: #7c6cf2;
+        color: #fff;
+        font-size: 15px;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 18px 42px rgba(124,108,242,.30);
+      ">Sign in</button>
     </div>
   `;
 
-  document.getElementById("signOutButton").onclick = signOut;
+  document.getElementById("openSignInModal").onclick = openSignInModal;
+}
+
+function ensureSignInModal() {
+  let authModal = document.getElementById("authModal");
+
+  if (authModal) {
+    return authModal;
+  }
+
+  authModal = document.createElement("div");
+  authModal.id = "authModal";
+  authModal.className = "modal hidden";
+  authModal.innerHTML = `
+    <div class="modal-card">
+      <button id="closeAuthModal" class="close" type="button" aria-label="Close modal">×</button>
+
+      <h2>Sign in</h2>
+
+      <label for="authEmailInput">Email</label>
+      <input id="authEmailInput" type="email" placeholder="your@email.com">
+
+      <button id="authEmailButton" class="save" type="button">Continue</button>
+
+      <p id="authMessage" style="
+        margin: 14px 0 0;
+        color: #777180;
+        font-size: 13px;
+        line-height: 1.4;
+      "></p>
+    </div>
+  `;
+
+  document.body.appendChild(authModal);
+
+  const closeAuthModal = document.getElementById("closeAuthModal");
+
+  closeAuthModal.onclick = closeSignInModal;
+
+  authModal.onclick = (event) => {
+    if (event.target === authModal) {
+      closeSignInModal();
+    }
+  };
+
+  return authModal;
+}
+
+function openSignInModal() {
+  const authModal = ensureSignInModal();
+  const emailInput = document.getElementById("authEmailInput");
+  const emailButton = document.getElementById("authEmailButton");
+  const authMessage = document.getElementById("authMessage");
+
+  authMessage.textContent = "";
+  emailInput.value = "";
+
+  emailButton.onclick = async () => {
+    const email = emailInput.value.trim();
+
+    if (!email) {
+      emailInput.focus();
+      return;
+    }
+
+    emailButton.disabled = true;
+    emailButton.textContent = "Sending...";
+
+    try {
+      await signInWithEmail(email);
+      authMessage.textContent = "Check your email. We sent you a magic link. Open it on this device.";
+    } catch (error) {
+      console.error(error);
+      authMessage.textContent = "Could not send magic link. Check Supabase Auth settings.";
+    } finally {
+      emailButton.disabled = false;
+      emailButton.textContent = "Continue";
+    }
+  };
+
+  authModal.classList.remove("hidden");
+  document.body.classList.add("modal-open");
+  setTimeout(() => emailInput.focus(), 80);
+}
+
+function closeSignInModal() {
+  const authModal = document.getElementById("authModal");
+
+  if (!authModal) {
+    return;
+  }
+
+  authModal.classList.add("hidden");
+
+  if (modal.classList.contains("hidden")) {
+    document.body.classList.remove("modal-open");
+  }
 }
 
 function initLists() {
@@ -487,7 +582,7 @@ function render() {
   shelfEl.innerHTML = "";
 
   if (!session) {
-    shelfEl.innerHTML = `<div class="empty">Sign in to see your shelf</div>`;
+    renderSignInShelf();
     return;
   }
 
@@ -766,6 +861,7 @@ async function initApp() {
     renderAuthState();
 
     if (session) {
+      closeSignInModal();
       await loadCloudShelf();
       await offerLegacyImportIfNeeded();
     } else {
