@@ -1,6 +1,11 @@
 const SUPABASE_URL = "https://roovratpatxubbdgzrtr.supabase.co";
 const SUPABASE_KEY = "sb_publishable_8kKEZ9yGoDiwVKMvcwYqZg_5T8bNNln";
-const LEGACY_STORAGE_KEY = "filmshelf_movies_v4";
+const LEGACY_STORAGE_KEYS = [
+  "filmshelf_movies_v1",
+  "filmshelf_movies_v2",
+  "filmshelf_movies_v3",
+  "filmshelf_movies_v4"
+];
 const MOVIES_ENDPOINT = `${SUPABASE_URL}/rest/v1/movies`;
 
 const genres = [
@@ -103,9 +108,7 @@ async function signInWithEmail(email) {
     }
   });
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 }
 
 async function signOut() {
@@ -178,19 +181,45 @@ async function deleteMovieFromCloud(id) {
   }
 }
 
-function loadLegacyMovies() {
-  const saved = localStorage.getItem(LEGACY_STORAGE_KEY);
+function makeMovieKey(movie) {
+  const title = String(movie.title || "").trim().toLowerCase();
+  const year = String(movie.year || "").trim();
+  return `${title}__${year}`;
+}
 
-  if (!saved) {
-    return [];
+function loadLegacyMoviesFromAllKeys() {
+  const found = [];
+  const seen = new Set();
+
+  for (const key of LEGACY_STORAGE_KEYS) {
+    const saved = localStorage.getItem(key);
+
+    if (!saved) continue;
+
+    try {
+      const parsed = JSON.parse(saved);
+
+      if (!Array.isArray(parsed)) continue;
+
+      for (const movie of parsed) {
+        if (!movie || !movie.title) continue;
+
+        const movieKey = makeMovieKey(movie);
+
+        if (!movieKey.trim() || seen.has(movieKey)) continue;
+
+        seen.add(movieKey);
+        found.push({
+          ...movie,
+          _legacyKey: key
+        });
+      }
+    } catch (error) {
+      console.warn(`Could not read ${key}`, error);
+    }
   }
 
-  try {
-    const parsed = JSON.parse(saved);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+  return found;
 }
 
 function prepareMovieForCloud(movie) {
@@ -210,34 +239,37 @@ function isStarterMovie(movie) {
   return starterTitles.includes(movie.title);
 }
 
-async function offerLegacyImportIfNeeded() {
-  const legacyMovies = loadLegacyMovies()
+function findMissingLegacyMovies() {
+  const cloudKeys = new Set(movies.map(makeMovieKey));
+
+  return loadLegacyMoviesFromAllKeys()
     .filter((movie) => movie && movie.title)
-    .filter((movie) => !isStarterMovie(movie));
+    .filter((movie) => !isStarterMovie(movie))
+    .filter((movie) => !cloudKeys.has(makeMovieKey(movie)));
+}
 
-  if (!legacyMovies.length) {
-    return;
-  }
+async function offerLegacyImportIfNeeded() {
+  const missingLegacyMovies = findMissingLegacyMovies();
 
-  const alreadyAskedKey = `filmshelf_import_asked_${session.user.id}`;
-  const alreadyAsked = localStorage.getItem(alreadyAskedKey);
+  if (!missingLegacyMovies.length) return;
 
-  if (alreadyAsked === "yes") {
-    return;
-  }
+  const titlesPreview = missingLegacyMovies
+    .slice(0, 6)
+    .map((movie) => `• ${movie.title}${movie.year ? ` (${movie.year})` : ""}`)
+    .join("\n");
+
+  const moreText = missingLegacyMovies.length > 6
+    ? `\n...and ${missingLegacyMovies.length - 6} more`
+    : "";
 
   const confirmed = window.confirm(
-    `I found ${legacyMovies.length} old saved movie(s) on this device. Import them to your cloud shelf?`
+    `I found ${missingLegacyMovies.length} old movie(s) on this device that are not in your cloud shelf yet:\n\n${titlesPreview}${moreText}\n\nImport them now?`
   );
 
-  localStorage.setItem(alreadyAskedKey, "yes");
-
-  if (!confirmed) {
-    return;
-  }
+  if (!confirmed) return;
 
   try {
-    for (const movie of legacyMovies) {
+    for (const movie of missingLegacyMovies) {
       await createMovieInCloud(prepareMovieForCloud(movie));
     }
 
@@ -254,9 +286,7 @@ async function offerLegacyImportIfNeeded() {
 function createAuthPanel() {
   let authPanel = document.getElementById("authPanel");
 
-  if (authPanel) {
-    return authPanel;
-  }
+  if (authPanel) return authPanel;
 
   authPanel = document.createElement("section");
   authPanel.id = "authPanel";
