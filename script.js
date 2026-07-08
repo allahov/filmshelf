@@ -31,6 +31,7 @@ let activeView = "watchlist";
 let selectedPoster = "";
 let editingId = null;
 let isLoading = true;
+let legacyImportInProgress = false;
 
 const shelfEl = document.getElementById("watchlist");
 const genresEl = document.getElementById("genres");
@@ -130,7 +131,7 @@ async function fetchMoviesFromCloud() {
   }
 
   const data = await response.json();
-  return Array.isArray(data) ? data : [];
+  return Array.isArray(data) ? dedupeMovies(data) : [];
 }
 
 async function createMovieInCloud(movie) {
@@ -185,6 +186,36 @@ function makeMovieKey(movie) {
   const title = String(movie.title || "").trim().toLowerCase();
   const year = String(movie.year || "").trim();
   return `${title}__${year}`;
+}
+
+function normalizeMovieKey(movie) {
+  const title = String(movie.title || "").trim().toLowerCase();
+  const year = String(movie.year || "").trim();
+  const type = String(movie.type || "").trim().toLowerCase();
+  const status = String(movie.status || "").trim().toLowerCase();
+
+  return `${title}__${year}__${type}__${status}`;
+}
+
+function dedupeMovies(list) {
+  const seen = new Set();
+  const result = [];
+
+  for (const movie of list) {
+    const key = normalizeMovieKey(movie);
+
+    if (!key.trim() || seen.has(key)) continue;
+
+    seen.add(key);
+    result.push(movie);
+  }
+
+  return result;
+}
+
+function movieAlreadyExists(moviePayload, list = movies) {
+  const key = normalizeMovieKey(moviePayload);
+  return list.some((movie) => normalizeMovieKey(movie) === key);
 }
 
 function loadLegacyMoviesFromAllKeys() {
@@ -249,9 +280,15 @@ function findMissingLegacyMovies() {
 }
 
 async function offerLegacyImportIfNeeded() {
+  if (legacyImportInProgress || !session?.user?.id) return;
+
+  const importDoneKey = `filmshelf_legacy_import_done_${session.user.id}`;
   const missingLegacyMovies = findMissingLegacyMovies();
 
-  if (!missingLegacyMovies.length) return;
+  if (!missingLegacyMovies.length) {
+    localStorage.setItem(importDoneKey, "yes");
+    return;
+  }
 
   const titlesPreview = missingLegacyMovies
     .slice(0, 6)
@@ -268,27 +305,30 @@ async function offerLegacyImportIfNeeded() {
 
   if (!confirmed) return;
 
+  legacyImportInProgress = true;
+
   try {
     for (const movie of missingLegacyMovies) {
       await createMovieInCloud(prepareMovieForCloud(movie));
     }
 
     movies = await fetchMoviesFromCloud();
+    localStorage.setItem(importDoneKey, "yes");
     render();
 
     alert("Old shelf imported successfully.");
   } catch (error) {
     console.error(error);
     alert("Could not import old shelf. Please try again.");
+  } finally {
+    legacyImportInProgress = false;
   }
 }
 
 function getProfileMenu() {
   let wrapper = document.getElementById("profileMenuWrapper");
 
-  if (wrapper) {
-    return wrapper;
-  }
+  if (wrapper) return wrapper;
 
   wrapper = document.createElement("div");
   wrapper.id = "profileMenuWrapper";
@@ -328,13 +368,7 @@ function getProfileMenu() {
       backdrop-filter: blur(14px);
       display: none;
     ">
-      <div style="
-        display:flex;
-        align-items:center;
-        gap:12px;
-        padding-bottom:14px;
-        border-bottom:1px solid rgba(20,18,23,.10);
-      ">
+      <div style="display:flex; align-items:center; gap:12px; padding-bottom:14px; border-bottom:1px solid rgba(20,18,23,.10);">
         <div id="profileAvatarLarge" style="
           width: 42px;
           height: 42px;
@@ -370,23 +404,9 @@ function getProfileMenu() {
         </div>
       </div>
 
-      <div style="
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        gap:12px;
-        padding:14px 0;
-        border-bottom:1px solid rgba(20,18,23,.10);
-      ">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 0; border-bottom:1px solid rgba(20,18,23,.10);">
         <span style="color:#201d27; font-size:13px; font-weight:800;">Cloud sync</span>
-        <span style="
-          color:#5e50d8;
-          background:#ede8ff;
-          border-radius:999px;
-          padding:6px 10px;
-          font-size:12px;
-          font-weight:900;
-        ">On</span>
+        <span style="color:#5e50d8; background:#ede8ff; border-radius:999px; padding:6px 10px; font-size:12px; font-weight:900;">On</span>
       </div>
 
       <button id="profileSignOutButton" type="button" style="
@@ -415,9 +435,7 @@ function getProfileMenu() {
     dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
   };
 
-  dropdown.onclick = (event) => {
-    event.stopPropagation();
-  };
+  dropdown.onclick = (event) => event.stopPropagation();
 
   signOutButton.onclick = async () => {
     dropdown.style.display = "none";
@@ -429,19 +447,14 @@ function getProfileMenu() {
   });
 
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") {
-      dropdown.style.display = "none";
-    }
+    if (event.key === "Escape") dropdown.style.display = "none";
   });
 
   return wrapper;
 }
 
 function getUserInitial(email) {
-  if (!email) {
-    return "A";
-  }
-
+  if (!email) return "A";
   return email.trim().charAt(0).toUpperCase();
 }
 
@@ -458,20 +471,13 @@ function renderAuthState() {
 
   wrapper.style.display = "block";
 
-  const avatarButton = document.getElementById("profileAvatarButton");
-  const avatarLarge = document.getElementById("profileAvatarLarge");
-  const profileName = document.getElementById("profileName");
-  const profileEmail = document.getElementById("profileEmail");
+  document.getElementById("profileAvatarButton").textContent = initial;
+  document.getElementById("profileAvatarLarge").textContent = initial;
+  document.getElementById("profileName").textContent = email ? email.split("@")[0] : "FilmShelf user";
+  document.getElementById("profileEmail").textContent = email;
+
   const dropdown = document.getElementById("profileDropdown");
-
-  avatarButton.textContent = initial;
-  avatarLarge.textContent = initial;
-  profileName.textContent = email ? email.split("@")[0] : "FilmShelf user";
-  profileEmail.textContent = email;
-
-  if (dropdown) {
-    dropdown.style.display = "none";
-  }
+  if (dropdown) dropdown.style.display = "none";
 }
 
 function renderSignInShelf() {
@@ -944,13 +950,24 @@ saveMovie.onclick = async () => {
         if (movie.id !== editingId) return movie;
         return updatedMovie;
       });
+
+      movies = dedupeMovies(movies);
     } else {
-      const newMovie = await createMovieInCloud({
+      const status = activeView === "watched" ? "watched" : "watchlist";
+      const newMoviePayload = {
         ...moviePayload,
-        status: activeView === "watched" ? "watched" : "watchlist"
-      });
+        status
+      };
+
+      if (movieAlreadyExists(newMoviePayload)) {
+        alert("This title is already on this shelf.");
+        return;
+      }
+
+      const newMovie = await createMovieInCloud(newMoviePayload);
 
       movies.unshift(newMovie);
+      movies = dedupeMovies(movies);
     }
 
     resetForm();
@@ -1000,8 +1017,66 @@ async function loadCloudShelf() {
   }
 }
 
+
+function enableDesktopDragScroll(element) {
+  if (!element) return;
+
+  let isDown = false;
+  let startX = 0;
+  let scrollLeft = 0;
+  let moved = false;
+
+  element.style.cursor = "grab";
+
+  element.addEventListener("mousedown", (event) => {
+    if (event.button !== 0) return;
+
+    isDown = true;
+    moved = false;
+    startX = event.pageX - element.offsetLeft;
+    scrollLeft = element.scrollLeft;
+    element.style.cursor = "grabbing";
+  });
+
+  element.addEventListener("mouseleave", () => {
+    isDown = false;
+    element.style.cursor = "grab";
+  });
+
+  element.addEventListener("mouseup", () => {
+    isDown = false;
+    element.style.cursor = "grab";
+
+    setTimeout(() => {
+      moved = false;
+    }, 0);
+  });
+
+  element.addEventListener("mousemove", (event) => {
+    if (!isDown) return;
+
+    event.preventDefault();
+
+    const x = event.pageX - element.offsetLeft;
+    const walk = (x - startX) * 1.4;
+
+    if (Math.abs(walk) > 5) moved = true;
+
+    element.scrollLeft = scrollLeft - walk;
+  });
+
+  element.addEventListener("click", (event) => {
+    if (!moved) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+  }, true);
+}
+
+
 async function initApp() {
   initLists();
+  enableDesktopDragScroll(shelfEl);
 
   supabase = await loadSupabaseClient();
   await refreshSession();
