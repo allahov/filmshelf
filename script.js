@@ -1088,7 +1088,7 @@ async function initApp() {
     if (session) {
       closeSignInModal();
       await loadCloudShelf();
-      await offerLegacyImportIfNeeded();
+      // Legacy local import is disabled after initial migration to prevent duplicates.
     } else {
       movies = [];
       render();
@@ -1099,7 +1099,7 @@ async function initApp() {
 
   if (session) {
     await loadCloudShelf();
-    await offerLegacyImportIfNeeded();
+    // Legacy local import is disabled after initial migration to prevent duplicates.
   } else {
     isLoading = false;
     render();
